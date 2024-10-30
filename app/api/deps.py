@@ -29,10 +29,6 @@ async def get_current_user(db_session: SessionDep, request: Request) -> UserInDB
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         )
-    if token_data.expired:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Token has expired"
-        )
     user = await get_user_by_email(db_session, token_data.sub)
     if not user:
         raise HTTPException(

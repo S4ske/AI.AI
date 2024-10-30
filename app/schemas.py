@@ -10,9 +10,9 @@ class UserBase(BaseModel):
     username: str | None = Field(default=None, max_length=255)
 
 
-class UserIn(BaseModel):
+class UserIn(UserBase):
     email: EmailStr = Field(max_length=255)
-    password: str | None = Field(min_length=8, max_length=40, default=None)
+    password: str = Field(min_length=8, max_length=40)
 
 
 class UserOut(UserBase):
@@ -24,12 +24,8 @@ class UserOut(UserBase):
 
 class UserInDB(UserBase):
     id: UUID
-    hashed_password: str | None = None
+    hashed_password: str
 
 
 class TokenPayload(BaseModel):
     sub: str | None = None
-    exp: datetime
-
-    def expired(self) -> bool:
-        return self.exp <= datetime.now(timezone.utc)
