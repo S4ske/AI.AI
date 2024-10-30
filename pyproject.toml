@@ -11,6 +11,15 @@ package-mode = false
 python = "^3.11"
 fastapi = "^0.115.4"
 uvicorn = "^0.32.0"
+opencv-python = "^4.10.0.84"
+pyjwt = "^2.9.0"
+pydantic-settings = "^2.6.0"
+passlib = "^1.7.4"
+types-passlib = "^1.7.7.20240819"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
+asyncpg = "^0.30.0"
+alembic = "^1.13.3"
+psycopg2 = "^2.9.10"
 
 
 [tool.poetry.group.dev.dependencies]
