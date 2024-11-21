@@ -16,12 +16,12 @@ pyjwt = "^2.9.0"
 pydantic-settings = "^2.6.0"
 passlib = "^1.7.4"
 types-passlib = "^1.7.7.20240819"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
 asyncpg = "^0.30.0"
 alembic = "^1.13.3"
-psycopg2 = "^2.9.10"
 pydantic = {extras = ["email"], version = "^2.9.2"}
 python-multipart = "^0.0.16"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
+pillow = "^11.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

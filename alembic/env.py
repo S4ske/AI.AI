@@ -13,7 +13,7 @@ from app.core.config import settings
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, 'POSTGRES_URL', str(settings.POSTGRES_URL))
+config.set_section_option(section, "POSTGRES_URL", str(settings.POSTGRES_URL))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -70,9 +70,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
