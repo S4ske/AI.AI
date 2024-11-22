@@ -42,25 +42,48 @@ class Project(Base):
     __tablename__ = "projects"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
-    owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    height: Mapped[int] = mapped_column(Integer, nullable=False, default=300)
-    width: Mapped[int] = mapped_column(Integer, nullable=False, default=300)
-    images_paths: Mapped[list[str]] = mapped_column(String, nullable=False, default=[])
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
     fps: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
     duration: Mapped[float] = mapped_column(Float, nullable=False)
 
-    animations: Mapped[list["Animation"]] = relationship(back_populates="project")
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+
+    animated_images: Mapped[list["AnimatedImage"]] = relationship(back_populates="project")
     owner: Mapped[User] = relationship(back_populates="projects")
+
+
+class AnimatedImage(Base):
+    __tablename__ = "animated_images"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    image_path: Mapped[str] = mapped_column(String, nullable=False)
+
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    angle: Mapped[float] = mapped_column(Float, nullable=False)
+    opacity: Mapped[float] = mapped_column(Float, nullable=False)
+    x: Mapped[float] = mapped_column(Float, nullable=False)
+    y: Mapped[float] = mapped_column(Float, nullable=False)
+
+    project_id: int = mapped_column(ForeignKey("projects.id"), nullable=False)
+
+    project: Mapped[Project] = relationship(back_populates="animated_images")
+    animations: Mapped[list["Animation"]] = relationship(back_populates="animated_image")
 
 
 class Animation(Base):
     __tablename__ = "animations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
-    param_name: Mapped[str] = mapped_column(String, nullable=False)
-    start_frame: Mapped[int] = mapped_column(Integer, nullable=False)
-    end_frame: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
-    project: Mapped[Project] = relationship(back_populates="animations")
+    param_name: Mapped[str] = mapped_column(String, nullable=False)
+    start_time: Mapped[float] = mapped_column(Float, nullable=False)
+    end_time: Mapped[float] = mapped_column(Float, nullable=False)
+    start_point: Mapped[float] = mapped_column(Float, nullable=False)
+    end_point: Mapped[float] = mapped_column(Float, nullable=False)
+
+    animated_image_id: Mapped[int] = mapped_column(ForeignKey("animated_images.id"), nullable=False)
+    animated_image: Mapped[AnimatedImage] = relationship(back_populates="animations")
