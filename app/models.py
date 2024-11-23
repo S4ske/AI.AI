@@ -67,6 +67,8 @@ class AnimatedImage(Base):
     opacity: Mapped[float] = mapped_column(Float, nullable=False)
     x: Mapped[float] = mapped_column(Float, nullable=False)
     y: Mapped[float] = mapped_column(Float, nullable=False)
+    living_start: Mapped[float] = mapped_column(Float, nullable=False)
+    living_end: Mapped[float] = mapped_column(Float, nullable=False)
 
     project_id: int = mapped_column(ForeignKey("projects.id"), nullable=False)
 
