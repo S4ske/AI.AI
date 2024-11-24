@@ -51,7 +51,9 @@ class Project(Base):
 
     owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    animated_images: Mapped[list["AnimatedImage"]] = relationship(back_populates="project")
+    animated_images: Mapped[list["AnimatedImage"]] = relationship(
+        back_populates="project"
+    )
     owner: Mapped[User] = relationship(back_populates="projects")
 
 
@@ -70,10 +72,12 @@ class AnimatedImage(Base):
     living_start: Mapped[float] = mapped_column(Float, nullable=False)
     living_end: Mapped[float] = mapped_column(Float, nullable=False)
 
-    project_id: int = mapped_column(ForeignKey("projects.id"), nullable=False)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
 
     project: Mapped[Project] = relationship(back_populates="animated_images")
-    animations: Mapped[list["Animation"]] = relationship(back_populates="animated_image")
+    animations: Mapped[list["Animation"]] = relationship(
+        back_populates="animated_image"
+    )
 
 
 class Animation(Base):
@@ -87,5 +91,7 @@ class Animation(Base):
     start_point: Mapped[float] = mapped_column(Float, nullable=False)
     end_point: Mapped[float] = mapped_column(Float, nullable=False)
 
-    animated_image_id: Mapped[int] = mapped_column(ForeignKey("animated_images.id"), nullable=False)
+    animated_image_id: Mapped[int] = mapped_column(
+        ForeignKey("animated_images.id"), nullable=False
+    )
     animated_image: Mapped[AnimatedImage] = relationship(back_populates="animations")

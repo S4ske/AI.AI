@@ -1,6 +1,11 @@
 from PIL import Image
 from typing import Any
-from app.schemas import AnimationParam, SourceParams, Source, AnimationSchema
+from app.schemas import (
+    AnimationParam,
+    AnimatedImageParams,
+    AnimatedImageSchema,
+    AnimationSchema,
+)
 
 
 def linear_interpolate(time: float, animation: "Animation") -> Any:
@@ -58,7 +63,7 @@ class AnimatedImage:
         name: str,
         living_start: float,
         living_end: float,
-        params: SourceParams,
+        params: AnimatedImageParams,
         animations: list[AnimationSchema],
     ) -> None:
         self.image = image
@@ -71,7 +76,7 @@ class AnimatedImage:
             self.animations.append(Animation.create_from_schema(animation))
         self.animations.sort(key=lambda x: x.start_time)
 
-    def interpolate(self, time: float) -> SourceParams | None:
+    def interpolate(self, time: float) -> AnimatedImageParams | None:
         if time < self.living_start or time > self.living_end:
             return None
         res = self.last_params.model_dump()
@@ -79,11 +84,13 @@ class AnimatedImage:
             new_value = animation.interpolate(time)
             if new_value is not None:
                 res[animation.param_name.value] = new_value
-        self.last_params = SourceParams(**res)
+        self.last_params = AnimatedImageParams(**res)
         return self.last_params
 
     @classmethod
-    def create_from_source(cls, image: Image.Image, source: Source) -> "AnimatedImage":
+    def create_from_source(
+        cls, image: Image.Image, source: AnimatedImageSchema
+    ) -> "AnimatedImage":
         return AnimatedImage(
             image,
             source.name,

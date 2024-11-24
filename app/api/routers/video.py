@@ -13,8 +13,7 @@ from app.schemas import RenderRequest
 from app.classes import AnimatedImage
 from PIL import Image
 from app.rendering.render import render_video
-from pydantic import ValidationError
-from pydantic import BaseModel
+from pydantic import ValidationError, BaseModel
 from fastapi.encoders import jsonable_encoder
 from io import BytesIO
 
@@ -42,7 +41,7 @@ async def render(
     render_info: RenderRequest = Depends(Checker(RenderRequest)),
 ) -> bool:
     anim_images = []
-    for source in render_info.sources:
+    for source in render_info.animated_images:
         curr_files: list[UploadFile] = list(
             filter(lambda x: x.filename == source.name, files)
         )

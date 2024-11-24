@@ -2,10 +2,10 @@ import cv2
 from PIL import Image
 import numpy as np
 from app.classes import AnimatedImage
-from app.schemas import SourceParams
+from app.schemas import AnimatedImageParams
 
 
-def apply_params(image: Image.Image, params: SourceParams) -> Image.Image:
+def apply_params(image: Image.Image, params: AnimatedImageParams) -> Image.Image:
     result = image
 
     result = result.rotate(params.angle)

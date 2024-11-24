@@ -49,7 +49,7 @@ class AnimationSchema(BaseModel):
     end_point: Any
 
 
-class SourceParams(BaseModel):
+class AnimatedImageParams(BaseModel):
     x: float
     y: float
     angle: float
@@ -58,16 +58,30 @@ class SourceParams(BaseModel):
     scale_y: float
 
 
-class Source(BaseModel):
+class AnimatedImageSchema(BaseModel):
     name: str
     living_start: float
     living_end: float
-    params: SourceParams
+    params: AnimatedImageParams
     animations: list[AnimationSchema]
 
 
+class AnimatedImageUpdate(BaseModel):
+    id: int
+    height: int | None = None
+    width: int | None = None
+    angle: float | None = None
+    opacity: float | None = None
+    x: float | None = None
+    y: float | None = None
+    living_start: float | None = None
+    living_end: float | None = None
+    project_id: int
+    animations: list[AnimationSchema] | None
+
+
 class RenderRequest(BaseModel):
-    sources: list[Source]
+    animated_images: list[AnimatedImageSchema]
     name: str
     duration: float
     shape: tuple[int, int]
