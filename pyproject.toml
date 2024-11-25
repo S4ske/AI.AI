@@ -22,6 +22,7 @@ pydantic = {extras = ["email"], version = "^2.9.2"}
 python-multipart = "^0.0.16"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
 pillow = "^11.0.0"
+psycopg2-binary = "^2.9.10"
 
 
 [tool.poetry.group.dev.dependencies]
