@@ -28,7 +28,7 @@ async def login(
         value=token,
         max_age=int(timedelta(days=7).total_seconds()),
         httponly=True,
-        secure=True,
+        secure=False,  # TODO: Передать True, когда перейдём на HTTPS
     )
     return "success"
 
