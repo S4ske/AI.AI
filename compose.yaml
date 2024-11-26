@@ -23,9 +23,20 @@ services:
     networks:
       - backend_network
 
+  redis:
+    image: "redis:latest"
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - backend_network
+
 networks:
   backend_network:
     driver: bridge
 
 volumes:
   pgdata:
+  redis_data:

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
 
+    REDIS_HOST: str
+
     @computed_field
     @property
     def POSTGRES_URL(self) -> PostgresDsn:

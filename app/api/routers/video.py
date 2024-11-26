@@ -8,14 +8,14 @@ from fastapi import (
     Form,
     BackgroundTasks,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from app.schemas import RenderRequest
 from app.classes import AnimatedImage
 from PIL import Image
-from app.rendering.render import render_video
 from pydantic import ValidationError, BaseModel
 from fastapi.encoders import jsonable_encoder
 from io import BytesIO
+from app.api.utils import render_with_redis, redis_client
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ class Checker:
     def __init__(self, model: type[BaseModel]) -> None:
         self.model = model
 
-    def __call__(self, data: str = Form(...)):
+    def __call__(self, data: str = Form()):
         try:
             return self.model.model_validate_json(data)
         except ValidationError as e:
@@ -37,7 +37,7 @@ class Checker:
 @router.post("/render_wa")
 async def render(
     bg_tasks: BackgroundTasks,
-    files: list[UploadFile] = File(...),
+    files: list[UploadFile] = File(),
     render_info: RenderRequest = Depends(Checker(RenderRequest)),
 ) -> bool:
     anim_images = []
@@ -54,7 +54,7 @@ async def render(
             )
         )
     bg_tasks.add_task(
-        render_video,
+        render_with_redis,
         render_info.name,
         anim_images,
         render_info.shape,
@@ -64,9 +64,22 @@ async def render(
     return True
 
 
+@router.get("/check_video/{name}")
+async def check_video(video_name: str) -> JSONResponse:
+    render_dict = redis_client.hgetall(video_name)
+    if not render_dict or not render_dict.get("status"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return JSONResponse(render_dict)
+
+
 @router.get("/video_wa")
 async def get_video(video_name: str) -> FileResponse:
     try:
+        render_dict = redis_client.hgetall(video_name)
+        if not render_dict or not render_dict.get("status") == "completed":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
         return FileResponse(
             path=video_name, filename=video_name, media_type="video/mp4"
         )
