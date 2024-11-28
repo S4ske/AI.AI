@@ -16,14 +16,14 @@ def apply_params(image: Image.Image, params: AnimatedImageParams) -> Image.Image
 
 
 def render_video(
-    name: str,
+    video_path: str,
     animated_images: list[AnimatedImage],
     shape: tuple[int, int],
     fps: int,
     duration: float,
 ):
     background = Image.new("RGBA", size=shape, color=(190, 190, 190, 255))
-    video = cv2.VideoWriter(name, cv2.VideoWriter.fourcc(*"mp4v"), fps, shape)
+    video = cv2.VideoWriter(video_path, cv2.VideoWriter.fourcc(*"mp4v"), fps, shape)
     total_frames = int(fps * duration)
 
     for frame_i in range(total_frames):

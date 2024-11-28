@@ -1,15 +1,26 @@
 services:
-  app:
+  builder:
     build:
       context: .
+      dockerfile: Dockerfile
+    image: myapp:latest
+    container_name: app_builder
+    profiles:
+      - build-only
+
+  app:
+    image: myapp:latest
     env_file:
       - .env
     ports:
       - 8000:8000
     depends_on:
       - pg
+      - redis
     networks:
       - backend_network
+    volumes:
+      - videos:/app/videos
 
   pg:
     image: "postgres"
@@ -33,6 +44,31 @@ services:
     networks:
       - backend_network
 
+  worker:
+    image: myapp:latest
+    command: celery -A app.api.utils worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - app
+      - redis
+    networks:
+      - backend_network
+    volumes:
+      - videos:/app/videos
+
+  flower:
+    image: mher/flower
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - app
+    networks:
+      - backend_network
+
 networks:
   backend_network:
     driver: bridge
@@ -40,3 +76,4 @@ networks:
 volumes:
   pgdata:
   redis_data:
+  videos:

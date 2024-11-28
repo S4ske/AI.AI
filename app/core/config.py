@@ -2,6 +2,7 @@ from pydantic import PostgresDsn, computed_field
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
@@ -24,6 +25,22 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     REDIS_HOST: str
+    REDIS_PORT: int
+
+    VIDEOS_TTL: int
+
+    PROJECT_PATH: str
+    VIDEOS_PATH: str
+
+    @computed_field
+    @property
+    def FULL_VIDEOS_PATH(self) -> str:
+        return os.path.join(self.PROJECT_PATH, self.VIDEOS_PATH)
+
+    @computed_field
+    @property
+    def REDIS_URL(self) -> str:
+        return "redis://" + self.REDIS_HOST + ":" + str(self.REDIS_PORT)
 
     @computed_field
     @property

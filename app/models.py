@@ -1,7 +1,15 @@
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, DateTime, Integer, ForeignKey, event, Float, func
+from sqlalchemy import (
+    String,
+    Boolean,
+    DateTime,
+    Integer,
+    ForeignKey,
+    event,
+    Float,
+)
 from uuid import uuid4, UUID
-from datetime import datetime, UTC
+from datetime import datetime
 
 Base = declarative_base()
 
