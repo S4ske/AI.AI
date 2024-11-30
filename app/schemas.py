@@ -45,8 +45,8 @@ class AnimationSchema(BaseModel):
     param_name: AnimationParam
     start_time: float
     end_time: float
-    start_point: Any
-    end_point: Any
+    start_point: float
+    end_point: float
 
 
 class AnimatedImageParams(BaseModel):
@@ -54,8 +54,8 @@ class AnimatedImageParams(BaseModel):
     y: float
     angle: float
     opacity: float
-    scale_x: float
-    scale_y: float
+    scale_x: float = Field(gt=0)
+    scale_y: float = Field(gt=0)
 
 
 class AnimatedImageSchema(BaseModel):
@@ -83,6 +83,6 @@ class AnimatedImageUpdate(BaseModel):
 class RenderRequest(BaseModel):
     animated_images: list[AnimatedImageSchema]
     name: str
-    duration: float
-    shape: tuple[int, int]
-    fps: int
+    duration: float = Field(gt=0)
+    shape: tuple[int, int] = Field(gt=(0, 0))
+    fps: int = Field(gt=0)

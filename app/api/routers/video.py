@@ -79,7 +79,7 @@ async def render(
 
 
 @router.get(
-    "/check_video/{name}",
+    "/check_video/{video_name}",
     description="Эндпоинт для проверки состояния рендера видео. Возвращает json "
     "со статусом рендера. Всего есть три состояния: "
     "'in progress', 'completed', 'failed'. Думаю, говорят сами за себя. "
@@ -89,14 +89,14 @@ async def render(
 )
 async def check_video(video_name: str) -> JSONResponse:
     render_status = await redis_client.get(video_name)
-    if not render_status or render_status != "completed":
+    if not render_status:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return JSONResponse(render_status)
 
 
 @router.get(
-    "/video_wa",
+    "/video_wa/{video_name}",
     description="Если видео с таким именем существует и его статус равен 'completed', "
     "то возвращает это видео в формате video/mp4. Названо оно <video_name>.mp4. "
     "Иначе ошибка 404_NOT_FOUND",
