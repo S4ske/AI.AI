@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from app.api.main import api_router
 from fastapi.middleware.cors import CORSMiddleware
-from app.schemas import AnimatedImageSchema, AnimationSchema, AnimatedImageParams, RenderRequest, AnimationParam
+
 
 app = FastAPI()
 app.include_router(api_router)
@@ -11,11 +11,6 @@ app.include_router(api_router)
 @app.get("/hello")
 async def hello() -> str:
     return "hello"
-
-
-@app.get("/reg")
-async def reg(a: AnimatedImageSchema | AnimationSchema | AnimatedImageParams | RenderRequest | AnimationParam):
-    return None
 
 
 app.add_middleware(

@@ -21,7 +21,7 @@ async def get_current_user(db_session: SessionDep, request: Request) -> UserInDB
     token = request.cookies.get("token")
     try:
         payload = jwt.decode(
-            token, key=settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+            str(token), key=settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
         token_data = TokenPayload(**payload)
     except (jwt.InvalidTokenError, ValidationError):

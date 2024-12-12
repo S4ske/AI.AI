@@ -1,5 +1,5 @@
 from redis.asyncio import Redis
-from app.classes import AnimatedImage
+from app.rendering.classes import AnimatedImage
 from app.rendering.render import render_video
 import os
 from app.core.config import settings
@@ -27,6 +27,7 @@ async def render_with_redis(
             shape,
             fps,
             duration,
+            "mp4v",
         )
         delete_video_file.apply_async(
             (os.path.join(settings.VIDEOS_PATH, video_name + ".mp4"),),

@@ -7,7 +7,7 @@ from app.schemas import AnimatedImageSchema, AnimatedImageUpdate
 async def create_project(
     db_session: AsyncSession, animated_image_schema: AnimatedImageSchema
 ) -> Project:
-    project_db = Project()
+    pass
 
 
 async def get_project(

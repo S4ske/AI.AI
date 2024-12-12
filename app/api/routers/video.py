@@ -10,14 +10,14 @@ from fastapi import (
     BackgroundTasks,
 )
 from fastapi.responses import FileResponse, JSONResponse
-from app.schemas import RenderRequest
-from app.classes import AnimatedImage
+from app.schemas import ProjectSchema
 from PIL import Image
 from pydantic import ValidationError, BaseModel
 from fastapi.encoders import jsonable_encoder
 from io import BytesIO
 from app.api.utils import render_with_redis, redis_client
 from app.core.config import settings
+from app.utils import create_linear_animated_image
 
 router = APIRouter()
 
@@ -52,7 +52,7 @@ class Checker:
 async def render(
     bg_tasks: BackgroundTasks,
     files: list[UploadFile] = File(default=[]),
-    render_info: RenderRequest = Depends(Checker(RenderRequest)),
+    render_info: ProjectSchema = Depends(Checker(ProjectSchema)),
 ) -> bool:
     anim_images = []
     for source in render_info.animated_images:
@@ -63,9 +63,7 @@ async def render(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
         file = curr_files[0]
         anim_images.append(
-            AnimatedImage.create_from_source(
-                Image.open(BytesIO(await file.read())), source
-            )
+            create_linear_animated_image(Image.open(BytesIO(await file.read())), source)
         )
     bg_tasks.add_task(
         render_with_redis,

@@ -1,16 +1,22 @@
 import cv2
 from PIL import Image
 import numpy as np
-from app.classes import AnimatedImage
+from app.rendering.classes import AnimatedImage
 from app.schemas import AnimatedImageParams
 
 
 def apply_params(image: Image.Image, params: AnimatedImageParams) -> Image.Image:
-    result = image
+    result = image.convert("RGBA")
 
-    result = result.rotate(params.angle)
-    result.putalpha(int(params.opacity))
+    r, g, b, a = result.split()
+    alpha_data = a.load()
+    for x in range(result.width):
+        for y in range(result.height):
+            if alpha_data[x, y] != 0:
+                alpha_data[x, y] = int(params.opacity)
+    result = Image.merge("RGBA", (r, g, b, a))
     result = result.resize((int(params.scale_x), int(params.scale_y)))
+    result = result.rotate(params.angle)
 
     return result
 
@@ -21,9 +27,11 @@ def render_video(
     shape: tuple[int, int],
     fps: int,
     duration: float,
+    codec: str,
+    background_color: tuple[float, ...] = (190, 190, 190, 255),
 ):
-    background = Image.new("RGBA", size=shape, color=(190, 190, 190, 255))
-    video = cv2.VideoWriter(video_path, cv2.VideoWriter.fourcc(*"mp4v"), fps, shape)
+    background = Image.new("RGBA", size=shape, color=background_color)
+    video = cv2.VideoWriter(video_path, cv2.VideoWriter.fourcc(*codec), fps, shape)
     total_frames = int(fps * duration)
 
     for frame_i in range(total_frames):

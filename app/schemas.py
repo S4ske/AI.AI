@@ -1,7 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from uuid import UUID
-from typing import Any
-from enum import Enum
+from app.rendering.schemas import AnimatedImageParams, AnimationParam
 
 
 class UserBase(BaseModel):
@@ -32,30 +31,12 @@ class TokenPayload(BaseModel):
     sub: str
 
 
-class AnimationParam(Enum):
-    x = "x"
-    y = "y"
-    angle = "angle"
-    opacity = "opacity"
-    scale_x = "scale_x"
-    scale_y = "scale_y"
-
-
 class AnimationSchema(BaseModel):
     param_name: AnimationParam
     start_time: float
     end_time: float
     start_point: float
     end_point: float
-
-
-class AnimatedImageParams(BaseModel):
-    x: float
-    y: float
-    angle: float
-    opacity: float
-    scale_x: float = Field(gt=0)
-    scale_y: float = Field(gt=0)
 
 
 class AnimatedImageSchema(BaseModel):
@@ -80,7 +61,7 @@ class AnimatedImageUpdate(BaseModel):
     animations: list[AnimationSchema] | None
 
 
-class RenderRequest(BaseModel):
+class ProjectSchema(BaseModel):
     animated_images: list[AnimatedImageSchema]
     name: str
     duration: float = Field(gt=0)
