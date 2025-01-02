@@ -2,14 +2,11 @@ from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
 from sqlalchemy import (
     String,
     Boolean,
-    DateTime,
     Integer,
     ForeignKey,
-    event,
     Float,
 )
 from uuid import uuid4, UUID
-from datetime import datetime
 
 Base = declarative_base()
 
@@ -27,19 +24,8 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.utcnow()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False
-    )
 
     projects: Mapped[list["Project"]] = relationship(back_populates="owner")
-
-
-@event.listens_for(User, "before_update")
-def set_updated_at(mapper, connection, target):
-    target.updated_at = datetime.utcnow()
 
 
 class Project(Base):

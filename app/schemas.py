@@ -10,6 +10,13 @@ class UserBase(BaseModel):
     username: str | None = Field(default=None, max_length=255)
 
 
+class UserUpdate(BaseModel):
+    email: EmailStr | None = Field(None, max_length=255)
+    is_active: bool | None = None
+    is_superuser: bool | None = None
+    username: str | None = Field(None, max_length=255)
+
+
 class UserIn(UserBase):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=40)
@@ -67,3 +74,11 @@ class ProjectSchema(BaseModel):
     duration: float = Field(gt=0)
     shape: tuple[int, int] = Field(gt=(0, 0))
     fps: int = Field(gt=0)
+
+
+class ProjectUpdate(ProjectSchema):
+    animated_images: list[AnimatedImageSchema] | None = None
+    name: str | None = None
+    duration: float | None = Field(None, gt=0)
+    shape: tuple[int, int] | None = Field(None, gt=(0, 0))
+    fps: int | None = Field(None, gt=0)

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, status
 from app.api.deps import SessionDep, UserDep
 from app.crud import users_crud
-from app.schemas import UserIn, UserOut
+from app.schemas import UserIn, UserOut, UserUpdate
 from pydantic import EmailStr
+from uuid import UUID
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 
 
 @router.get("/me")
@@ -25,16 +26,23 @@ async def create_user(db_session: SessionDep, user_create: UserIn) -> str:
     return "success"
 
 
+@router.put("/update")
+async def update_user(db_session: SessionDep, id: UUID, user_update: UserUpdate):
+    updated_user = await users_crud.update_user(db_session, id, user_update)
+    if updated_user:
+        return updated_user
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
 @router.get("/get/{email}")
 async def get_user_by_email(db_session: SessionDep, email: EmailStr) -> UserOut:
     user_db = await users_crud.get_user_by_email(db_session, email)
     if user_db:
         return user_db
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post("/delete/{email}")
+@router.delete("/delete/{email}")
 async def delete_user_by_email(db_session: SessionDep, email: str) -> UserOut:
     user_db = await users_crud.get_user_by_email(db_session, email)
     if not user_db:

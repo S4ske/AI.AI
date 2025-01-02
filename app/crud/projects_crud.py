@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Project
 from uuid import UUID
-from app.schemas import AnimatedImageSchema, AnimatedImageUpdate
+from app.schemas import ProjectSchema, ProjectUpdate
 
 
 async def create_project(
-    db_session: AsyncSession, animated_image_schema: AnimatedImageSchema
+    db_session: AsyncSession, project_schema: ProjectSchema
 ) -> Project:
     pass
 
@@ -26,6 +26,6 @@ async def update_project(
     db_session: AsyncSession,
     user_id: UUID,
     project_id: int,
-    animated_image_update: AnimatedImageUpdate,
+    project_update: ProjectUpdate,
 ) -> Project:
     pass

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User
-from app.schemas import UserIn
+from app.schemas import UserIn, UserUpdate
 from app.core.security import get_password_hash, verify_password
 from uuid import UUID
 from sqlalchemy import select
@@ -72,17 +72,12 @@ async def delete_user(db_session: AsyncSession, email: str) -> User | None:
 
 
 async def update_user(
-    db_session: AsyncSession, id: UUID, user_update: UserIn
+    db_session: AsyncSession, id: UUID, user_update: UserUpdate
 ) -> User | None:
     user_data = user_update.model_dump(exclude_unset=True)
     user_db = await get_user_by_id(db_session, id)
     if not user_db:
         return None
-
-    if "password" in user_data:
-        password = user_data["password"]
-        hashed_password = get_password_hash(password)
-        user_data["hashed_password"] = hashed_password
 
     for field, value in user_data.items():
         setattr(user_db, field, value)
