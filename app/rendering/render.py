@@ -13,7 +13,8 @@ def apply_params(image: Image.Image, params: AnimatedImageParams) -> Image.Image
     for x in range(result.width):
         for y in range(result.height):
             if alpha_data[x, y] != 0:
-                alpha_data[x, y] = int(params.opacity)
+                start_opacity = alpha_data[x, y]
+                alpha_data[x, y] = (start_opacity / 255) * int(params.opacity)
     result = Image.merge("RGBA", (r, g, b, a))
     result = result.resize((int(params.scale_x), int(params.scale_y)))
     result = result.rotate(params.angle)
