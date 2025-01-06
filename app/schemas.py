@@ -66,4 +66,5 @@ class ProjectSchema(BaseModel):
     name: str
     duration: float = Field(gt=0)
     shape: tuple[int, int] = Field(gt=(0, 0))
+    background_color: tuple[float, float, float]
     fps: int = Field(gt=0)

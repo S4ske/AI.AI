@@ -65,6 +65,7 @@ async def render(
         anim_images.append(
             create_linear_animated_image(Image.open(BytesIO(await file.read())), source)
         )
+    background_color = render_info.background_color
     bg_tasks.add_task(
         render_with_redis,
         render_info.name,
@@ -72,6 +73,7 @@ async def render(
         render_info.shape,
         render_info.fps,
         render_info.duration,
+        (background_color[0], background_color[1], background_color[2], 255)
     )
     return True
 
