@@ -18,7 +18,7 @@ async def render_with_redis(
     shape: tuple[int, int],
     fps: int,
     duration: float,
-    background_color: tuple[float, ...]
+    background_color: tuple[int, ...]
 ):
     await redis_client.set(video_name, "in progress")
     try:
