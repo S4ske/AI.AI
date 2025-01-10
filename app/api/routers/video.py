@@ -67,8 +67,7 @@ async def render(
         )
     background_color = render_info.background_color
     render_with_celery.apply_async(
-        (render_with_redis,
-         render_info.name,
+        (render_info.name,
          anim_images,
          render_info.shape,
          render_info.fps,
