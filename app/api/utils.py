@@ -22,7 +22,7 @@ async def render_with_redis(
 ):
     await redis_client.set(video_name, "in progress")
     try:
-        render_video(
+        await render_video(
             os.path.join(settings.VIDEOS_PATH, video_name + ".mp4"),
             animated_images,
             shape,

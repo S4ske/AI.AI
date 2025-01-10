@@ -22,7 +22,7 @@ def apply_params(image: Image.Image, params: AnimatedImageParams) -> Image.Image
     return result
 
 
-def render_video(
+async def render_video(
     video_path: str,
     animated_images: list[AnimatedImage],
     shape: tuple[int, int],
