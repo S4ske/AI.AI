@@ -55,15 +55,15 @@ async def render(
     render_info: ProjectSchema = Depends(Checker(ProjectSchema)),
 ) -> bool:
     anim_images = []
+    images_dict = {}
+    for file in files:
+        images_dict[file.filename] = Image.open(BytesIO(await file.read()))
     for source in render_info.animated_images:
-        curr_files: list[UploadFile] = list(
-            filter(lambda x: x.filename == source.name, files)
-        )
-        if not curr_files:
+        file = images_dict.get(source.name)
+        if not file:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-        file = curr_files[0]
         anim_images.append(
-            create_linear_animated_image(Image.open(BytesIO(await file.read())), source)
+            create_linear_animated_image(file, source)
         )
     background_color = render_info.background_color
     bg_tasks.add_task(
