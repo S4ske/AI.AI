@@ -37,7 +37,8 @@ async def render_video(
 
     for frame_i in range(total_frames):
         time = duration * (frame_i / total_frames)
-        cv_frame = cv2.cvtColor(np.array(await build_frame(time, background, animated_images)), cv2.COLOR_RGBA2BGR)
+        current_frame = await build_frame(time, background, animated_images)
+        cv_frame = cv2.cvtColor(np.array(current_frame), cv2.COLOR_RGBA2BGR)
         video.write(cv_frame)
 
     video.release()
