@@ -7,6 +7,7 @@ from fastapi import (
     Depends,
     File,
     Form,
+    BackgroundTasks
 )
 from fastapi.responses import FileResponse, JSONResponse
 from app.schemas import ProjectSchema
@@ -17,8 +18,6 @@ from io import BytesIO
 from app.api.utils import render_with_redis, redis_client
 from app.core.config import settings
 from app.utils import create_linear_animated_image
-from app.api.utils import celery_app
-from app.rendering.classes import AnimatedImage
 
 router = APIRouter()
 
@@ -51,6 +50,7 @@ class Checker:
     response_model=bool,
 )
 async def render(
+        bg_tasks: BackgroundTasks,
         files: list[UploadFile] = File(default=[]),
         render_info: ProjectSchema = Depends(Checker(ProjectSchema)),
 ) -> bool:
@@ -66,13 +66,14 @@ async def render(
             create_linear_animated_image(file, source)
         )
     background_color = render_info.background_color
-    render_with_celery.apply_async(
-        (render_info.name,
-         anim_images,
-         render_info.shape,
-         render_info.fps,
-         render_info.duration,
-         (background_color[0], background_color[1], background_color[2], 255))
+    bg_tasks.add_task(
+        render_with_redis,
+        render_info.name,
+        anim_images,
+        render_info.shape,
+        render_info.fps,
+        render_info.duration,
+        (background_color[0], background_color[1], background_color[2], 255)
     )
     return True
 
@@ -87,7 +88,7 @@ async def render(
     response_class=JSONResponse,
 )
 async def check_video(video_name: str) -> JSONResponse:
-    render_status = redis_client.get(video_name)
+    render_status = await redis_client.get(video_name)
     if not render_status:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -103,7 +104,7 @@ async def check_video(video_name: str) -> JSONResponse:
 )
 async def get_video(video_name: str) -> FileResponse:
     try:
-        render_status = redis_client.get(video_name)
+        render_status = await redis_client.get(video_name)
         if not render_status or render_status != "completed":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -114,21 +115,3 @@ async def get_video(video_name: str) -> FileResponse:
         )
     except RuntimeError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-
-@celery_app.task(name="render_with_celery", ignore_result=True)
-async def render_with_celery(
-        video_name: str,
-        animated_images: list[AnimatedImage],
-        shape: tuple[int, int],
-        fps: int,
-        duration: float,
-        background_color: tuple[int, ...]
-) -> None:
-    render_with_redis(
-        video_name,
-        animated_images,
-        shape,
-        fps,
-        duration,
-        (background_color[0], background_color[1], background_color[2], 255))

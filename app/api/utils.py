@@ -1,4 +1,4 @@
-from redis import Redis
+from redis.asyncio import Redis
 from app.rendering.classes import AnimatedImage
 from app.rendering.render import render_video
 import os
@@ -12,7 +12,7 @@ celery_app.conf.broker_url = settings.REDIS_URL
 celery_app.conf.result_backend = settings.REDIS_URL
 
 
-def render_with_redis(
+async def render_with_redis(
     video_name: str,
     animated_images: list[AnimatedImage],
     shape: tuple[int, int],
@@ -20,9 +20,9 @@ def render_with_redis(
     duration: float,
     background_color: tuple[int, ...]
 ):
-    redis_client.set(video_name, "in progress")
+    await redis_client.set(video_name, "in progress")
     try:
-        render_video(
+        await render_video(
             os.path.join(settings.VIDEOS_PATH, video_name + ".mp4"),
             animated_images,
             shape,
@@ -35,9 +35,9 @@ def render_with_redis(
             (os.path.join(settings.VIDEOS_PATH, video_name + ".mp4"),),
             countdown=settings.VIDEOS_TTL,
         )
-        redis_client.set(video_name, "completed", ex=settings.VIDEOS_TTL)
+        await redis_client.set(video_name, "completed", ex=settings.VIDEOS_TTL)
     except Exception as e:
-        redis_client.set(video_name, "failed")
+        await redis_client.set(video_name, "failed")
         raise e
 
 

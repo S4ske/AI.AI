@@ -22,7 +22,7 @@ def apply_params(image: Image.Image, params: AnimatedImageParams) -> Image.Image
     return result
 
 
-def render_video(
+async def render_video(
     video_path: str,
     animated_images: list[AnimatedImage],
     shape: tuple[int, int],
@@ -37,18 +37,22 @@ def render_video(
 
     for frame_i in range(total_frames):
         time = duration * (frame_i / total_frames)
-        curr_frame = background.copy()
-
-        for anim_img in animated_images:
-            img_params = anim_img.interpolate(time)
-            if not img_params:
-                continue
-            processed = apply_params(anim_img.image, img_params)
-            curr_frame.paste(
-                processed, (int(img_params.x), int(img_params.y)), processed
-            )
-
-        cv_frame = cv2.cvtColor(np.array(curr_frame), cv2.COLOR_RGBA2BGR)
+        cv_frame = cv2.cvtColor(np.array(await build_frame(time, background, animated_images)), cv2.COLOR_RGBA2BGR)
         video.write(cv_frame)
 
     video.release()
+
+
+async def build_frame(time: float, background: Image, animated_images: list[AnimatedImage]) -> Image:
+    curr_frame = background.copy()
+
+    for anim_img in animated_images:
+        img_params = anim_img.interpolate(time)
+        if not img_params:
+            continue
+        processed = apply_params(anim_img.image, img_params)
+        curr_frame.paste(
+            processed, (int(img_params.x), int(img_params.y)), processed
+        )
+
+    return curr_frame
