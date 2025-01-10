@@ -7,7 +7,6 @@ from fastapi import (
     Depends,
     File,
     Form,
-    BackgroundTasks,
 )
 from fastapi.responses import FileResponse, JSONResponse
 from app.schemas import ProjectSchema
@@ -18,6 +17,8 @@ from io import BytesIO
 from app.api.utils import render_with_redis, redis_client
 from app.core.config import settings
 from app.utils import create_linear_animated_image
+from app.api.utils import celery_app
+from app.rendering.classes import AnimatedImage
 
 router = APIRouter()
 
@@ -39,20 +40,19 @@ class Checker:
 @router.post(
     "/render_wa",
     description="Эндпоинт для начала рендера. В files передаются изображения учавствующие "
-    "в анимации. В data передаются json СТРОКА (не реальный application/json, а "
-    "именно строка в формате json, т.к. весь запрос в формате multiaprt/form-data) "
-    "соответсвующая схеме RenderRequest (указан ниже в блоке Schemas). В поле "
-    "'animated_images' схемы RenderRequest анимированные изображения имеют имена "
-    "соответсвующих им файлам из files и расположены в порядке расположения на "
-    "холсте, от тех, которые дальше от нас (на заднем фоне) к тем, которые ближе. "
-    "Если не выдаёт ошибку, то всегда возвращает True. Видео удаляется через 10 "
-    "минут, после того как отрендерилось.",
+                "в анимации. В data передаются json СТРОКА (не реальный application/json, а "
+                "именно строка в формате json, т.к. весь запрос в формате multiaprt/form-data) "
+                "соответсвующая схеме RenderRequest (указан ниже в блоке Schemas). В поле "
+                "'animated_images' схемы RenderRequest анимированные изображения имеют имена "
+                "соответсвующих им файлам из files и расположены в порядке расположения на "
+                "холсте, от тех, которые дальше от нас (на заднем фоне) к тем, которые ближе. "
+                "Если не выдаёт ошибку, то всегда возвращает True. Видео удаляется через 10 "
+                "минут, после того как отрендерилось.",
     response_model=bool,
 )
 async def render(
-    bg_tasks: BackgroundTasks,
-    files: list[UploadFile] = File(default=[]),
-    render_info: ProjectSchema = Depends(Checker(ProjectSchema)),
+        files: list[UploadFile] = File(default=[]),
+        render_info: ProjectSchema = Depends(Checker(ProjectSchema)),
 ) -> bool:
     anim_images = []
     images_dict = {}
@@ -66,7 +66,7 @@ async def render(
             create_linear_animated_image(file, source)
         )
     background_color = render_info.background_color
-    bg_tasks.add_task(
+    render_with_celery.apply_async(
         render_with_redis,
         render_info.name,
         anim_images,
@@ -81,14 +81,14 @@ async def render(
 @router.get(
     "/check_video/{video_name}",
     description="Эндпоинт для проверки состояния рендера видео. Возвращает json "
-    "со статусом рендера. Всего есть три состояния: "
-    "'in progress', 'completed', 'failed'. Думаю, говорят сами за себя. "
-    "Если видео с таким именем не существует или оно уже удалено, "
-    "то возвращает ошибку 404_NOT_FOUND.",
+                "со статусом рендера. Всего есть три состояния: "
+                "'in progress', 'completed', 'failed'. Думаю, говорят сами за себя. "
+                "Если видео с таким именем не существует или оно уже удалено, "
+                "то возвращает ошибку 404_NOT_FOUND.",
     response_class=JSONResponse,
 )
 async def check_video(video_name: str) -> JSONResponse:
-    render_status = await redis_client.get(video_name)
+    render_status = redis_client.get(video_name)
     if not render_status:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -98,13 +98,13 @@ async def check_video(video_name: str) -> JSONResponse:
 @router.get(
     "/video_wa/{video_name}",
     description="Если видео с таким именем существует и его статус равен 'completed', "
-    "то возвращает это видео в формате video/mp4. Названо оно <video_name>.mp4. "
-    "Иначе ошибка 404_NOT_FOUND",
+                "то возвращает это видео в формате video/mp4. Названо оно <video_name>.mp4. "
+                "Иначе ошибка 404_NOT_FOUND",
     response_class=FileResponse,
 )
 async def get_video(video_name: str) -> FileResponse:
     try:
-        render_status = await redis_client.get(video_name)
+        render_status = redis_client.get(video_name)
         if not render_status or render_status != "completed":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -115,3 +115,21 @@ async def get_video(video_name: str) -> FileResponse:
         )
     except RuntimeError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@celery_app.task(name="render_with_celery", ignore_result=True)
+async def render_with_celery(
+        video_name: str,
+        animated_images: list[AnimatedImage],
+        shape: tuple[int, int],
+        fps: int,
+        duration: float,
+        background_color: tuple[int, ...]
+) -> None:
+    render_with_redis(
+        video_name,
+        animated_images,
+        shape,
+        fps,
+        duration,
+        (background_color[0], background_color[1], background_color[2], 255))
