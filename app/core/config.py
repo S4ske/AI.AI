@@ -26,11 +26,14 @@ class Settings(BaseSettings):
 
     REDIS_HOST: str
     REDIS_PORT: int
+    REDIS_PASSWORD: str
 
     VIDEOS_TTL: int
 
     PROJECT_PATH: str
     VIDEOS_PATH: str
+
+    PHOTOS_PATH: str
 
     @computed_field
     @property

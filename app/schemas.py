@@ -64,7 +64,7 @@ class AnimatedImageUpdate(BaseModel):
 class ProjectSchema(BaseModel):
     animated_images: list[AnimatedImageSchema]
     name: str
-    duration: float = Field(gt=0)
-    shape: tuple[int, int] = Field(gt=(0, 0))
+    duration: float = Field(ge=0)
+    shape: tuple[int, int] = Field(ge=(0, 0))
     background_color: tuple[int, int, int]
     fps: int = Field(gt=0)

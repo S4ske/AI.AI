@@ -1,4 +1,4 @@
-import os.path
+import os
 from fastapi import (
     APIRouter,
     UploadFile,
@@ -7,17 +7,18 @@ from fastapi import (
     Depends,
     File,
     Form,
-    BackgroundTasks
 )
 from fastapi.responses import FileResponse, JSONResponse
 from app.schemas import ProjectSchema
-from PIL import Image
 from pydantic import ValidationError, BaseModel
 from fastapi.encoders import jsonable_encoder
-from io import BytesIO
-from app.api.utils import render_with_redis, redis_client
+from app.api.utils import render_with_redis, redis_client, delete_file
 from app.core.config import settings
-from app.utils import create_linear_animated_image
+from random import randint
+from PIL import Image
+from io import BytesIO
+from app.schemas import AnimationSchema
+from typing import Any
 
 router = APIRouter()
 
@@ -50,32 +51,45 @@ class Checker:
     response_model=bool,
 )
 async def render(
-        bg_tasks: BackgroundTasks,
         files: list[UploadFile] = File(default=[]),
-        render_info: ProjectSchema = Depends(Checker(ProjectSchema)),
+        project_schema: ProjectSchema = Depends(Checker(ProjectSchema)),
 ) -> bool:
-    anim_images = []
-    images_dict = {}
+    directory_name = str(randint(0, 100000))
+    directory_path = os.path.join(settings.PHOTOS_PATH, directory_name)
+    os.makedirs(directory_path, exist_ok=True)
+    images_paths = []
     for file in files:
-        images_dict[file.filename] = Image.open(BytesIO(await file.read()))
-    for source in render_info.animated_images:
-        file = images_dict.get(source.name)
-        if not file:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-        anim_images.append(
-            create_linear_animated_image(file, source)
+        filename = file.filename
+        image_path = os.path.join(directory_path, filename)
+        image = Image.open(BytesIO(await file.read()))
+        image.save(image_path)
+        delete_file.apply_async(
+            (image_path,),
+            countdown=settings.VIDEOS_TTL + 60,
         )
-    background_color = render_info.background_color
-    bg_tasks.add_task(
-        render_with_redis,
-        render_info.name,
-        anim_images,
-        render_info.shape,
-        render_info.fps,
-        render_info.duration,
-        (background_color[0], background_color[1], background_color[2], 255)
+        images_paths.append(image_path)
+    render_with_redis.apply_async(
+        (
+            project_schema.name,
+            images_paths,
+            project_schema.shape,
+            project_schema.fps,
+            project_schema.duration,
+            project_schema.background_color,
+            list(map(lambda x: x.name, project_schema.animated_images)),
+            list(map(lambda x: x.living_start, project_schema.animated_images)),
+            list(map(lambda x: x.living_end, project_schema.animated_images)),
+            list(map(lambda x: x.params.model_dump(), project_schema.animated_images)),
+            list(map(lambda x: list(map(model_dump_animation, x.animations)), project_schema.animated_images)),
+        )
     )
     return True
+
+
+def model_dump_animation(animation: AnimationSchema) -> dict[str, Any]:
+    dump = animation.model_dump()
+    dump["param_name"] = str(dump["param_name"])
+    return dump
 
 
 @router.get(
@@ -88,7 +102,7 @@ async def render(
     response_class=JSONResponse,
 )
 async def check_video(video_name: str) -> JSONResponse:
-    render_status = await redis_client.get(video_name)
+    render_status = redis_client.get(video_name)
     if not render_status:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -104,7 +118,7 @@ async def check_video(video_name: str) -> JSONResponse:
 )
 async def get_video(video_name: str) -> FileResponse:
     try:
-        render_status = await redis_client.get(video_name)
+        render_status = redis_client.get(video_name)
         if not render_status or render_status != "completed":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
