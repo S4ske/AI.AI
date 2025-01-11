@@ -81,7 +81,7 @@ def render_with_redis(
         raise e
 
 
-@celery_app.task(name="delete_video_file", ignore_result=True)
+@celery_app.task(name="delete_file", ignore_result=True)
 def delete_file(path: str) -> None:
     if os.path.exists(path):
         os.remove(path)
