@@ -7,7 +7,12 @@ from PIL import Image
 from app.utils import create_linear_animated_image
 from app.schemas import AnimatedImageSchema, AnimatedImageParams, AnimationSchema
 
-redis_client = Redis(host=settings.REDIS_HOST, port=6379, decode_responses=True, password=settings.REDIS_PASSWORD)
+redis_client = Redis(
+    host=settings.REDIS_HOST,
+    port=6379,
+    decode_responses=True,
+    password=settings.REDIS_PASSWORD,
+)
 
 celery_app = Celery()
 celery_app.conf.broker_url = settings.REDIS_URL
@@ -16,17 +21,17 @@ celery_app.conf.result_backend = settings.REDIS_URL
 
 @celery_app.task(name="render_with_redis", ignore_result=True)
 def render_with_redis(
-        project_name: str,
-        images_paths: list[str],
-        shape: tuple[int, int],
-        fps: int,
-        duration: int,
-        background_color: tuple[float, float, float],
-        animated_images_names: list[str],
-        animated_images_living_starts: list[float],
-        animated_images_living_ends: list[float],
-        animated_images_params: list[dict],
-        animated_images_animations: list[list[dict]],
+    project_name: str,
+    images_paths: list[str],
+    shape: tuple[int, int],
+    fps: int,
+    duration: int,
+    background_color: tuple[float, float, float],
+    animated_images_names: list[str],
+    animated_images_living_starts: list[float],
+    animated_images_living_ends: list[float],
+    animated_images_params: list[dict],
+    animated_images_animations: list[list[dict]],
 ):
     redis_client.set(project_name, "in progress")
     try:
@@ -46,22 +51,33 @@ def render_with_redis(
             )
             animations = []
             for j in range(len(animated_images_animations[i])):
-                animations.append(AnimationSchema(
-                    param_name=str(animated_images_animations[i][j]["param_name"]).split(".")[-1],
-                    start_time=float(animated_images_animations[i][j]["start_time"]),
-                    end_time=float(animated_images_animations[i][j]["end_time"]),
-                    start_point=float(animated_images_animations[i][j]["start_point"]),
-                    end_point=float(animated_images_animations[i][j]["end_point"]),
-                ))
+                animations.append(
+                    AnimationSchema(
+                        param_name=str(
+                            animated_images_animations[i][j]["param_name"]
+                        ).split(".")[-1],
+                        start_time=float(
+                            animated_images_animations[i][j]["start_time"]
+                        ),
+                        end_time=float(animated_images_animations[i][j]["end_time"]),
+                        start_point=float(
+                            animated_images_animations[i][j]["start_point"]
+                        ),
+                        end_point=float(animated_images_animations[i][j]["end_point"]),
+                    )
+                )
             animated_image_schema = AnimatedImageSchema(
                 name=str(animated_images_names[i]),
                 living_start=float(animated_images_living_starts[i]),
                 living_end=float(animated_images_living_ends[i]),
                 params=params,
-                animations=animations
+                animations=animations,
             )
-            animated_images.append(create_linear_animated_image(images_dict[animated_images_names[i]],
-                                                                animated_image_schema))
+            animated_images.append(
+                create_linear_animated_image(
+                    images_dict[animated_images_names[i]], animated_image_schema
+                )
+            )
         render_video(
             os.path.join(settings.VIDEOS_PATH, project_name + ".mp4"),
             animated_images,

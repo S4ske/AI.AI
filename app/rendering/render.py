@@ -44,7 +44,9 @@ def render_video(
     video.release()
 
 
-def build_frame(time: float, background: Image, animated_images: list[AnimatedImage]) -> Image:
+def build_frame(
+    time: float, background: Image, animated_images: list[AnimatedImage]
+) -> Image:
     curr_frame = background.copy()
 
     for anim_img in animated_images:
@@ -52,8 +54,6 @@ def build_frame(time: float, background: Image, animated_images: list[AnimatedIm
         if not img_params:
             continue
         processed = apply_params(anim_img.image, img_params)
-        curr_frame.paste(
-            processed, (int(img_params.x), int(img_params.y)), processed
-        )
+        curr_frame.paste(processed, (int(img_params.x), int(img_params.y)), processed)
 
     return curr_frame

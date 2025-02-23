@@ -40,19 +40,19 @@ class Checker:
 @router.post(
     "/render_wa",
     description="Эндпоинт для начала рендера. В files передаются изображения учавствующие "
-                "в анимации. В data передаются json СТРОКА (не реальный application/json, а "
-                "именно строка в формате json, т.к. весь запрос в формате multiaprt/form-data) "
-                "соответсвующая схеме RenderRequest (указан ниже в блоке Schemas). В поле "
-                "'animated_images' схемы RenderRequest анимированные изображения имеют имена "
-                "соответсвующих им файлам из files и расположены в порядке расположения на "
-                "холсте, от тех, которые дальше от нас (на заднем фоне) к тем, которые ближе. "
-                "Если не выдаёт ошибку, то всегда возвращает True. Видео удаляется через 10 "
-                "минут, после того как отрендерилось.",
+    "в анимации. В data передаются json СТРОКА (не реальный application/json, а "
+    "именно строка в формате json, т.к. весь запрос в формате multiaprt/form-data) "
+    "соответсвующая схеме RenderRequest (указан ниже в блоке Schemas). В поле "
+    "'animated_images' схемы RenderRequest анимированные изображения имеют имена "
+    "соответсвующих им файлам из files и расположены в порядке расположения на "
+    "холсте, от тех, которые дальше от нас (на заднем фоне) к тем, которые ближе. "
+    "Если не выдаёт ошибку, то всегда возвращает True. Видео удаляется через 10 "
+    "минут, после того как отрендерилось.",
     response_model=bool,
 )
 async def render(
-        files: list[UploadFile] = File(default=[]),
-        project_schema: ProjectSchema = Depends(Checker(ProjectSchema)),
+    files: list[UploadFile] = File(default=[]),
+    project_schema: ProjectSchema = Depends(Checker(ProjectSchema)),
 ) -> bool:
     directory_name = str(randint(0, 100000))
     directory_path = os.path.join(settings.PHOTOS_PATH, directory_name)
@@ -80,7 +80,12 @@ async def render(
             list(map(lambda x: x.living_start, project_schema.animated_images)),
             list(map(lambda x: x.living_end, project_schema.animated_images)),
             list(map(lambda x: x.params.model_dump(), project_schema.animated_images)),
-            list(map(lambda x: list(map(model_dump_animation, x.animations)), project_schema.animated_images)),
+            list(
+                map(
+                    lambda x: list(map(model_dump_animation, x.animations)),
+                    project_schema.animated_images,
+                )
+            ),
         )
     )
     return True
@@ -95,10 +100,10 @@ def model_dump_animation(animation: AnimationSchema) -> dict[str, Any]:
 @router.get(
     "/check_video/{video_name}",
     description="Эндпоинт для проверки состояния рендера видео. Возвращает json "
-                "со статусом рендера. Всего есть три состояния: "
-                "'in progress', 'completed', 'failed'. Думаю, говорят сами за себя. "
-                "Если видео с таким именем не существует или оно уже удалено, "
-                "то возвращает ошибку 404_NOT_FOUND.",
+    "со статусом рендера. Всего есть три состояния: "
+    "'in progress', 'completed', 'failed'. Думаю, говорят сами за себя. "
+    "Если видео с таким именем не существует или оно уже удалено, "
+    "то возвращает ошибку 404_NOT_FOUND.",
     response_class=JSONResponse,
 )
 async def check_video(video_name: str) -> JSONResponse:
@@ -112,8 +117,8 @@ async def check_video(video_name: str) -> JSONResponse:
 @router.get(
     "/video_wa/{video_name}",
     description="Если видео с таким именем существует и его статус равен 'completed', "
-                "то возвращает это видео в формате video/mp4. Названо оно <video_name>.mp4. "
-                "Иначе ошибка 404_NOT_FOUND",
+    "то возвращает это видео в формате video/mp4. Названо оно <video_name>.mp4. "
+    "Иначе ошибка 404_NOT_FOUND",
     response_class=FileResponse,
 )
 async def get_video(video_name: str) -> FileResponse:

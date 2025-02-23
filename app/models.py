@@ -5,16 +5,27 @@ from sqlalchemy import (
     DateTime,
     Integer,
     ForeignKey,
-    event,
     Float,
+    TupleType,
+    func,
 )
-from uuid import uuid4, UUID
 from datetime import datetime
+from uuid import uuid4, UUID
 
 Base = declarative_base()
 
 
-class User(Base):
+class TimestampMixin:
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), nullable=False
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class User(Base, TimestampMixin):
     __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(default=uuid4, primary_key=True, nullable=False)
@@ -27,31 +38,25 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.utcnow()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False
-    )
 
     projects: Mapped[list["Project"]] = relationship(back_populates="owner")
 
 
-@event.listens_for(User, "before_update")
-def set_updated_at(mapper, connection, target):
-    target.updated_at = datetime.utcnow()
-
-
-class Project(Base):
+class Project(Base, TimestampMixin):
     __tablename__ = "projects"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, nullable=False, autoincrement=True
+    )
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     width: Mapped[int] = mapped_column(Integer, nullable=False)
     fps: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
     duration: Mapped[float] = mapped_column(Float, nullable=False)
+    background_color: Mapped[tuple[int, int, int]] = mapped_column(
+        TupleType(Integer, Integer, Integer), nullable=False
+    )
 
     owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
 
@@ -61,10 +66,12 @@ class Project(Base):
     owner: Mapped[User] = relationship(back_populates="projects")
 
 
-class AnimatedImage(Base):
+class AnimatedImage(Base, TimestampMixin):
     __tablename__ = "animated_images"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, nullable=False, autoincrement=True
+    )
     image_path: Mapped[str] = mapped_column(String, nullable=False)
 
     height: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -84,10 +91,12 @@ class AnimatedImage(Base):
     )
 
 
-class Animation(Base):
+class Animation(Base, TimestampMixin):
     __tablename__ = "animations"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, nullable=False, autoincrement=True
+    )
 
     param_name: Mapped[str] = mapped_column(String, nullable=False)
     start_time: Mapped[float] = mapped_column(Float, nullable=False)
