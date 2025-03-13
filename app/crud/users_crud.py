@@ -1,23 +1,26 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import User
-from app.schemas import UserIn
-from app.core.security import get_password_hash, verify_password
 from uuid import UUID
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.security import get_password_hash, verify_password
+from app.models.user import User
+from app.schemas import UserIn
 
 
 async def create_user(db_session: AsyncSession, user_create: UserIn) -> User:
-    user_dict = user_create.model_dump()
+    user_dict = user_create.model_dump(exclude={"password"})
     user_dict["hashed_password"] = get_password_hash(user_create.password)
     user_db = User(**user_dict)
     db_session.add(user_db)
-    await db_session.commit()
+    await db_session.flush()
     await db_session.refresh(user_db)
     return user_db
 
 
 async def get_user_by_id(db_session: AsyncSession, id: UUID) -> User | None:
-    stmt = select(User).where(User.id == id)
+    stmt = select(User).where(User.id == id).options(selectinload(User.projects))
     user_db = (await db_session.execute(stmt)).first()
     if not user_db:
         return None
@@ -25,7 +28,7 @@ async def get_user_by_id(db_session: AsyncSession, id: UUID) -> User | None:
 
 
 async def get_user_by_username(db_session: AsyncSession, username: str) -> User | None:
-    stmt = select(User).where(User.username == username)
+    stmt = select(User).where(User.username == username).options(selectinload(User.projects))
     result = await db_session.execute(stmt)
     if not result:
         return None
@@ -36,7 +39,7 @@ async def get_user_by_username(db_session: AsyncSession, username: str) -> User 
 
 
 async def get_user_by_email(db_session: AsyncSession, email: str) -> User | None:
-    stmt = select(User).where(User.email == email)
+    stmt = select(User).where(User.email == email).options(selectinload(User.projects))
     result = await db_session.execute(stmt)
     if not result:
         return None
@@ -46,9 +49,7 @@ async def get_user_by_email(db_session: AsyncSession, email: str) -> User | None
     return user_db[0]
 
 
-async def authenticate(
-    db_session: AsyncSession, username: str, password: str
-) -> User | None:
+async def authenticate(db_session: AsyncSession, username: str, password: str) -> User | None:
     user = await get_user_by_email(db_session, username)
     if not user:
         return None
@@ -57,9 +58,7 @@ async def authenticate(
     return user
 
 
-async def update_user(
-    db_session: AsyncSession, id: UUID, user_update: UserIn
-) -> User | None:
+async def update_user(db_session: AsyncSession, id: UUID, user_update: UserIn) -> User | None:
     user_db = await get_user_by_id(db_session, id)
     if not user_db:
         return None
@@ -73,7 +72,7 @@ async def update_user(
     for field, value in user_data.items():
         setattr(user_db, field, value)
 
-    await db_session.commit()
+    await db_session.flush()
     await db_session.refresh(user_db)
     return user_db
 
@@ -83,5 +82,5 @@ async def delete_user(db_session: AsyncSession, email: str) -> User | None:
     if not user_db:
         return None
     await db_session.delete(user_db)
-    await db_session.commit()
+    await db_session.flush()
     return user_db

@@ -1,11 +1,13 @@
-from PIL import Image
-from typing import Any
-from app.rendering.schemas import (
-    AnimationParam,
-    AnimatedImageParams,
-)
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from typing import Any
+
+from PIL import Image
+
+from app.rendering.schemas import (
+    AnimatedImageParams,
+    AnimationParam,
+)
 
 
 class Interpolator(ABC):

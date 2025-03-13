@@ -1,28 +1,33 @@
-from app.core.db import engine
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
-from fastapi import Depends, Request, HTTPException, status
+
 import jwt
-from app.core.config import settings
+from fastapi import Depends, HTTPException, Request, status
 from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.core.db import engine
 from app.crud.users_crud import get_user_by_email
-from app.schemas import UserInDB, TokenPayload
+from app.schemas import TokenPayload, UserInDB
 
 
-async def get_db():
+async def get_db_with_commit():
     async with AsyncSession(engine) as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
 
 
-SessionDep = Annotated[AsyncSession, Depends(get_db)]
+SessionDepWithCommit = Annotated[AsyncSession, Depends(get_db_with_commit)]
 
 
-async def get_current_user(db_session: SessionDep, request: Request) -> UserInDB:
+async def get_current_user(db_session: SessionDepWithCommit, request: Request) -> UserInDB:
     token = request.cookies.get("token")
     try:
-        payload = jwt.decode(
-            str(token), key=settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
-        )
+        payload = jwt.decode(str(token), key=settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         token_data = TokenPayload(**payload)
     except (jwt.InvalidTokenError, ValidationError):
         raise HTTPException(
@@ -31,13 +36,9 @@ async def get_current_user(db_session: SessionDep, request: Request) -> UserInDB
         )
     user = await get_user_by_email(db_session, token_data.sub)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
     return user
 
 

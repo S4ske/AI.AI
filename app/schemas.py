@@ -1,7 +1,9 @@
-from pydantic import BaseModel, EmailStr, Field
-from uuid import UUID
-from app.rendering.schemas import AnimationParam
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
+
+from app.rendering.schemas import AnimationParam
 
 
 class TimestampSchema(BaseModel):
@@ -16,7 +18,7 @@ class UserBase(BaseModel):
     username: str | None = Field(default=None, max_length=255)
 
 
-class UserSchema(BaseModel, TimestampSchema):
+class UserSchema(TimestampSchema):
     id: UUID
     email: str
     username: str | None
@@ -46,7 +48,7 @@ class TokenPayload(BaseModel):
     sub: str
 
 
-class AnimationSchema(BaseModel, TimestampSchema):
+class AnimationSchema(TimestampSchema):
     id: int
     param_name: AnimationParam
     start_time: float
@@ -54,7 +56,6 @@ class AnimationSchema(BaseModel, TimestampSchema):
     start_point: float
     end_point: float
     animated_image_id: int
-    animated_image: "AnimatedImageSchema"
 
 
 class AnimationCreate(BaseModel):
@@ -63,7 +64,6 @@ class AnimationCreate(BaseModel):
     end_time: float
     start_point: float
     end_point: float
-    animated_image_id: int
 
 
 class AnimationUpdate(BaseModel):
@@ -74,7 +74,7 @@ class AnimationUpdate(BaseModel):
     end_point: float | None = None
 
 
-class AnimatedImageSchema(BaseModel, TimestampSchema):
+class AnimatedImageSchema(TimestampSchema):
     id: int
     image_path: str
     height: int
@@ -86,7 +86,6 @@ class AnimatedImageSchema(BaseModel, TimestampSchema):
     living_start: float
     living_end: float
     project_id: int
-    project: "ProjectSchema"
     animations: list[AnimationSchema]
 
 
@@ -100,7 +99,6 @@ class AnimatedImageCreate(BaseModel):
     y: float
     living_start: float
     living_end: float
-    project_id: int
 
 
 class AnimatedImageUpdate(BaseModel):
@@ -115,7 +113,7 @@ class AnimatedImageUpdate(BaseModel):
     living_end: float | None = None
 
 
-class ProjectSchema(BaseModel, TimestampSchema):
+class ProjectSchema(TimestampSchema):
     id: int
     name: str = Field(max_length=255)
     height: int = Field(ge=0)
@@ -125,7 +123,6 @@ class ProjectSchema(BaseModel, TimestampSchema):
     background_color: tuple[int, int, int]
     owner_id: UUID
     animated_images: list[AnimatedImageSchema]
-    owner: UserSchema
 
 
 class ProjectCreate(BaseModel):
@@ -135,7 +132,6 @@ class ProjectCreate(BaseModel):
     fps: int = Field(ge=0)
     duration: float = Field(ge=0)
     background_color: tuple[int, int, int]
-    owner_id: UUID
 
 
 class ProjectUpdate(BaseModel):

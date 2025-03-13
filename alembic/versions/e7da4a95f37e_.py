@@ -8,9 +8,10 @@ Create Date: 2024-11-25 14:15:35.911193
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "e7da4a95f37e"
@@ -94,17 +95,11 @@ def downgrade() -> None:
         "user",
         sa.Column("id", sa.UUID(), autoincrement=False, nullable=False),
         sa.Column("email", sa.VARCHAR(length=255), autoincrement=False, nullable=True),
-        sa.Column(
-            "username", sa.VARCHAR(length=255), autoincrement=False, nullable=True
-        ),
+        sa.Column("username", sa.VARCHAR(length=255), autoincrement=False, nullable=True),
         sa.Column("is_active", sa.BOOLEAN(), autoincrement=False, nullable=True),
         sa.Column("is_superuser", sa.BOOLEAN(), autoincrement=False, nullable=True),
-        sa.Column(
-            "created_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True
-        ),
-        sa.Column(
-            "updated_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True
-        ),
+        sa.Column("created_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
+        sa.Column("updated_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
         sa.Column("hashed_password", sa.VARCHAR(), autoincrement=False, nullable=True),
         sa.PrimaryKeyConstraint("id", name="user_pkey"),
     )

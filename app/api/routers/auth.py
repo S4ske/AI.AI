@@ -1,17 +1,19 @@
-from fastapi import APIRouter, Response, HTTPException, status, Depends
-from app.crud import users_crud
-from app.api.deps import SessionDep
-from app.core.security import verify_password, create_access_token
 from datetime import timedelta
-from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
+
+from app.api.deps import SessionDepWithCommit
+from app.core.security import create_access_token, verify_password
+from app.crud import users_crud
 
 router = APIRouter()
 
 
 @router.post("/login")
 async def login(
-    db_session: SessionDep,
+    db_session: SessionDepWithCommit,
     form: Annotated[OAuth2PasswordRequestForm, Depends()],
     response: Response,
 ) -> str:
@@ -19,9 +21,7 @@ async def login(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Wrong email")
     if not verify_password(form.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Wrong password"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Wrong password")
     token = create_access_token(user.email, expires_delta=timedelta(days=7))
     response.set_cookie(
         key="token",

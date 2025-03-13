@@ -1,11 +1,16 @@
-from redis import Redis
-from app.rendering.render import render_video
 import os
-from app.core.config import settings
+from typing import TypeVar
+
 from celery import Celery
 from PIL import Image
+from pydantic import BaseModel
+from redis import Redis
+
+from app.core.config import settings
+from app.rendering.render import render_video
+from app.rendering.schemas import AnimatedImageParams
+from app.schemas import AnimatedImageSchema, AnimationSchema
 from app.utils import create_linear_animated_image
-from app.schemas import AnimatedImageSchema, AnimatedImageParams, AnimationSchema
 
 redis_client = Redis(
     host=settings.REDIS_HOST,
@@ -17,6 +22,10 @@ redis_client = Redis(
 celery_app = Celery()
 celery_app.conf.broker_url = settings.REDIS_URL
 celery_app.conf.result_backend = settings.REDIS_URL
+
+
+Schema = TypeVar("Schema", bound=BaseModel)
+Model = TypeVar("Model")
 
 
 @celery_app.task(name="render_with_redis", ignore_result=True)
@@ -53,16 +62,10 @@ def render_with_redis(
             for j in range(len(animated_images_animations[i])):
                 animations.append(
                     AnimationSchema(
-                        param_name=str(
-                            animated_images_animations[i][j]["param_name"]
-                        ).split(".")[-1],
-                        start_time=float(
-                            animated_images_animations[i][j]["start_time"]
-                        ),
+                        param_name=str(animated_images_animations[i][j]["param_name"]).split(".")[-1],
+                        start_time=float(animated_images_animations[i][j]["start_time"]),
                         end_time=float(animated_images_animations[i][j]["end_time"]),
-                        start_point=float(
-                            animated_images_animations[i][j]["start_point"]
-                        ),
+                        start_point=float(animated_images_animations[i][j]["start_point"]),
                         end_point=float(animated_images_animations[i][j]["end_point"]),
                     )
                 )
@@ -74,9 +77,7 @@ def render_with_redis(
                 animations=animations,
             )
             animated_images.append(
-                create_linear_animated_image(
-                    images_dict[animated_images_names[i]], animated_image_schema
-                )
+                create_linear_animated_image(images_dict[animated_images_names[i]], animated_image_schema)
             )
         render_video(
             os.path.join(settings.VIDEOS_PATH, project_name + ".mp4"),

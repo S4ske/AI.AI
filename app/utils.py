@@ -1,6 +1,7 @@
-from app.schemas import AnimationSchema, AnimatedImageSchema
-from app.rendering.classes import AnimatedImage, Animation, LinearInterpolator
 from PIL import Image
+
+from app.rendering.classes import AnimatedImage, Animation, LinearInterpolator
+from app.schemas import AnimatedImageSchema, AnimationSchema
 
 
 def create_linear_animation(animation_schema: AnimationSchema) -> Animation:
@@ -14,9 +15,7 @@ def create_linear_animation(animation_schema: AnimationSchema) -> Animation:
     )
 
 
-def create_linear_animated_image(
-    image: Image, animated_image_schema: AnimatedImageSchema
-) -> AnimatedImage:
+def create_linear_animated_image(image: Image, animated_image_schema: AnimatedImageSchema) -> AnimatedImage:
     return AnimatedImage(
         image,
         animated_image_schema.name,

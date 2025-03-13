@@ -1,8 +1,9 @@
 import cv2
-from PIL import Image
 import numpy as np
+from PIL import Image
+
 from app.rendering.classes import AnimatedImage
-from app.schemas import AnimatedImageParams
+from app.rendering.schemas import AnimatedImageParams
 
 
 def apply_params(image: Image.Image, params: AnimatedImageParams) -> Image.Image:
@@ -44,9 +45,7 @@ def render_video(
     video.release()
 
 
-def build_frame(
-    time: float, background: Image, animated_images: list[AnimatedImage]
-) -> Image:
+def build_frame(time: float, background: Image, animated_images: list[AnimatedImage]) -> Image:
     curr_frame = background.copy()
 
     for anim_img in animated_images:

@@ -1,24 +1,25 @@
 import os
+from io import BytesIO
+from random import randint
+from typing import Any
+
 from fastapi import (
     APIRouter,
-    UploadFile,
-    HTTPException,
-    status,
     Depends,
     File,
     Form,
+    HTTPException,
+    UploadFile,
+    status,
 )
-from fastapi.responses import FileResponse, JSONResponse
-from app.schemas import ProjectSchema
-from pydantic import ValidationError, BaseModel
 from fastapi.encoders import jsonable_encoder
-from app.api.utils import render_with_redis, redis_client, delete_file
-from app.core.config import settings
-from random import randint
+from fastapi.responses import FileResponse, JSONResponse
 from PIL import Image
-from io import BytesIO
-from app.schemas import AnimationSchema
-from typing import Any
+from pydantic import BaseModel, ValidationError
+
+from app.api.utils import delete_file, redis_client, render_with_redis
+from app.core.config import settings
+from app.schemas import AnimationSchema, ProjectSchema
 
 router = APIRouter()
 

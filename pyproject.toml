@@ -34,3 +34,19 @@ mypy = "^1.13.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 119
+output-format = "grouped"
+show-fixes = true
+target-version = "py37"
+exclude = [".svn", "CVS", ".bzr", ".hg",".git", "__pycache__", ".tox", ".eggs", "*.egg", ".venv", "env", "venv", "build"]
+
+[tool.ruff.lint]
+select = ["W", "E", "F", "I", "N", "T20", "Q"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.lint.mccabe]
+max-complexity = 6
